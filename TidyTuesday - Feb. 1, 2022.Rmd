@@ -1,0 +1,58 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set up
+```{r}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(stringr)
+```
+```{r}
+breed_traits <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/breed_traits.csv')
+trait_description <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/trait_description.csv')
+breed_rank_all <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-02-01/breed_rank.csv')
+```
+# Data wrangling
+
+```{r}
+#Declaring "cnames" for data integration
+cnames <- colnames(breed_traits)
+#Excluding everything except  Breed, Coat length, and Coat type
+cnames_pivot<-cnames[!cnames %in% c('Breed','Coat Length', 'Coat Type')]
+# Pivoting table from wide --> long
+breed_traits_long <- breed_traits %>% pivot_longer(cols=cnames_pivot, names_to= 'variable', values_to= 'value')
+# Check that code worked
+head(breed_traits_long); tail(breed_traits_long)
+```
+
+```{r}
+unique(breed_traits_long$variable)
+```
+
+```{r}
+#Renaming Coat Type and Coat Length to remove spaces for coding
+colnames(breed_traits_long)[2] <-'Coat.Type'
+colnames(breed_traits_long)[3] <- 'Coat.Length'
+colnames(breed_traits_long)
+```
+
+```{r}
+# Filtering for Watchdog/Protective Nature value and for entries that have the word "hound"
+df.plot<-breed_traits_long %>% filter(variable == 'Watchdog/Protective Nature')  %>% filter(str_detect(Breed, 'hound'))
+head(df.plot)
+```
+
+
+# Plotting and Visualization
+
+```{r}
+# Plotting Data
+set.seed(10)
+ggplot(df.plot, aes(x=Coat.Type, y=value, color=Breed)) +
+  geom_jitter(width=0.2, height=0.1) +
+  ylab('Protective Nature (mellow to vilagent)') +
+theme_bw()
+```
